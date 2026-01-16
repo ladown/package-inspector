@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from app.comparator import ImageComparator
 from app.config import Config
 

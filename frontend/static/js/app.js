@@ -1,110 +1,121 @@
-document.addEventListener('DOMContentLoaded', () => {
-    let referenceFile = null;
-    let testFile = null;
+document.addEventListener("DOMContentLoaded", () => {
+  let referenceFile = null;
+  let testFile = null;
 
-    const referenceInput = document.querySelector('#reference-input');
-    const testInput = document.querySelector('#test-input');
-    const compareButton = document.querySelector('#compare-btn');
-    const resultsContainer = document.querySelector('#results');
-    const statusBadge = document.querySelector('#status-badge');
-    const similarityElement = document.querySelector('#similarity');
-    const defectsCountElement = document.querySelector('#defects-count');
-    const annotatedContainer = document.querySelector('#annotated-container');
-    const annotatedImage = document.querySelector('#annotated-image');
-    const loadingElement = document.querySelector('#loading');
-    const errorContainer = document.querySelector('#error');
+  const referenceInput = document.querySelector("#reference-input");
+  const testInput = document.querySelector("#test-input");
+  const compareButton = document.querySelector("#compare-btn");
+  const resultsContainer = document.querySelector("#results");
+  const statusBadge = document.querySelector("#status-badge");
+  const similarityElement = document.querySelector("#similarity");
+  const defectsCountElement = document.querySelector("#defects-count");
+  const annotatedContainer = document.querySelector("#annotated-container");
+  const annotatedImage = document.querySelector("#annotated-image");
+  const loadingElement = document.querySelector("#loading");
+  const errorContainer = document.querySelector("#error");
 
-    const handleFileSelect = (event, imageType) => {
-        const selectedFile = event.target.files[0];
-        if (!selectedFile) return;
+  const handleFileSelect = (event, imageType) => {
+    const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
 
-        if (imageType === 'reference') {
-            referenceFile = selectedFile;
-        } else {
-            testFile = selectedFile;
-        }
+    if (imageType === "reference") {
+      referenceFile = selectedFile;
+    } else {
+      testFile = selectedFile;
+    }
 
-        const fileReader = new FileReader();
-        fileReader.onload = (readerEvent) => {
-            const previewId = imageType === 'reference' ? 'reference-preview' : 'test-preview';
-            const previewElement = document.querySelector(`#${previewId}`);
-            previewElement.innerHTML = `<img src="${readerEvent.target.result}" alt="${imageType}" class="max-w-full h-auto rounded-lg shadow">`;
-        };
-        fileReader.readAsDataURL(selectedFile);
-
-        updateCompareButton();
+    const fileReader = new FileReader();
+    fileReader.onload = (readerEvent) => {
+      const previewId =
+        imageType === "reference" ? "reference-preview" : "test-preview";
+      const previewElement = document.querySelector(`#${previewId}`);
+      previewElement.innerHTML = `<img src="${readerEvent.target.result}" alt="${imageType}" class="max-w-full h-auto rounded-lg shadow">`;
     };
+    fileReader.readAsDataURL(selectedFile);
 
-    const updateCompareButton = () => {
-        compareButton.disabled = !(referenceFile && testFile);
-    };
+    updateCompareButton();
+  };
 
-    const compareImages = async () => {
-        hideError();
-        showLoading(true);
-        resultsContainer.classList.add('hidden');
+  const updateCompareButton = () => {
+    compareButton.disabled = !(referenceFile && testFile);
+  };
 
-        const formData = new FormData();
-        formData.append('reference', referenceFile);
-        formData.append('test', testFile);
+  const compareImages = async () => {
+    hideError();
+    showLoading(true);
+    resultsContainer.classList.add("hidden");
 
-        try {
-            const response = await fetch('/api/compare', {
-                method: 'POST',
-                body: formData
-            });
+    const formData = new FormData();
+    formData.append("reference", referenceFile);
+    formData.append("test", testFile);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Ошибка при сравнении изображений');
-            }
+    try {
+      const response = await fetch("/api/compare", {
+        method: "POST",
+        body: formData,
+      });
 
-            const comparisonResult = await response.json();
-            displayResults(comparisonResult);
-        } catch (error) {
-            showError(error.message);
-        } finally {
-            showLoading(false);
-        }
-    };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка при сравнении изображений");
+      }
 
-    const displayResults = (comparisonResult) => {
-        resultsContainer.classList.remove('hidden');
+      const comparisonResult = await response.json();
+      displayResults(comparisonResult);
+    } catch (error) {
+      showError(error.message);
+    } finally {
+      showLoading(false);
+    }
+  };
 
-        if (comparisonResult.status === 'OK') {
-            statusBadge.className = 'inline-block px-6 py-3 bg-green-500 text-white text-lg font-bold rounded-lg';
-            statusBadge.textContent = 'ВСЕ ЭЛЕМЕНТЫ НА МЕСТЕ';
-        } else {
-            statusBadge.className = 'inline-block px-6 py-3 bg-red-500 text-white text-lg font-bold rounded-lg';
-            statusBadge.textContent = 'ОБНАРУЖЕНЫ ОТКЛОНЕНИЯ';
-        }
+  const displayResults = (comparisonResult) => {
+    resultsContainer.classList.remove("hidden");
 
-        similarityElement.textContent = (comparisonResult.similarity_score * 100).toFixed(1) + '%';
-        defectsCountElement.textContent = comparisonResult.defects_count;
+    if (comparisonResult.status === "OK") {
+      statusBadge.className =
+        "inline-block px-6 py-3 bg-green-500 text-white text-lg font-bold rounded-lg";
+      statusBadge.textContent = "ВСЕ ЭЛЕМЕНТЫ НА МЕСТЕ";
+    } else {
+      statusBadge.className =
+        "inline-block px-6 py-3 bg-red-500 text-white text-lg font-bold rounded-lg";
+      statusBadge.textContent = "ОБНАРУЖЕНЫ ОТКЛОНЕНИЯ";
+    }
 
-        if (comparisonResult.status === 'FAIL' && comparisonResult.annotated_image) {
-            annotatedImage.src = comparisonResult.annotated_image;
-            annotatedContainer.classList.remove('hidden');
-        } else {
-            annotatedContainer.classList.add('hidden');
-        }
-    };
+    similarityElement.textContent =
+      (comparisonResult.similarity_score * 100).toFixed(1) + "%";
+    defectsCountElement.textContent = comparisonResult.defects_count;
 
-    const showLoading = (isLoading) => {
-        loadingElement.classList.toggle('hidden', !isLoading);
-        compareButton.disabled = isLoading;
-    };
+    if (
+      comparisonResult.status === "FAIL" &&
+      comparisonResult.annotated_image
+    ) {
+      annotatedImage.src = comparisonResult.annotated_image;
+      annotatedContainer.classList.remove("hidden");
+    } else {
+      annotatedContainer.classList.add("hidden");
+    }
+  };
 
-    const showError = (errorMessage) => {
-        errorContainer.textContent = errorMessage;
-        errorContainer.classList.remove('hidden');
-    };
+  const showLoading = (isLoading) => {
+    loadingElement.classList.toggle("hidden", !isLoading);
+    compareButton.disabled = isLoading;
+  };
 
-    const hideError = () => {
-        errorContainer.classList.add('hidden');
-    };
+  const showError = (errorMessage) => {
+    errorContainer.textContent = errorMessage;
+    errorContainer.classList.remove("hidden");
+  };
 
-    referenceInput.addEventListener('change', (event) => handleFileSelect(event, 'reference'));
-    testInput.addEventListener('change', (event) => handleFileSelect(event, 'test'));
-    compareButton.addEventListener('click', compareImages);
+  const hideError = () => {
+    errorContainer.classList.add("hidden");
+  };
+
+  referenceInput.addEventListener("change", (event) =>
+    handleFileSelect(event, "reference"),
+  );
+  testInput.addEventListener("change", (event) =>
+    handleFileSelect(event, "test"),
+  );
+  compareButton.addEventListener("click", compareImages);
 });

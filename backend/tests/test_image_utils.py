@@ -3,8 +3,6 @@ import io
 import cv2
 import numpy as np
 import pytest
-from PIL import Image
-
 from app.image_utils import (
     encode_to_base64,
     load_image,
@@ -12,10 +10,11 @@ from app.image_utils import (
     to_grayscale,
     validate_image,
 )
+from PIL import Image
 
 
 def test_load_image(temp_image_file):
-    with open(temp_image_file, 'rb') as f:
+    with open(temp_image_file, "rb") as f:
         image = load_image(f)
     assert image is not None
     assert isinstance(image, np.ndarray)
@@ -23,7 +22,7 @@ def test_load_image(temp_image_file):
 
 
 def test_load_image_invalid():
-    invalid_file = io.BytesIO(b'invalid image data')
+    invalid_file = io.BytesIO(b"invalid image data")
     with pytest.raises(ValueError):
         load_image(invalid_file)
 

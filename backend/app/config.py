@@ -1,19 +1,12 @@
-"""
-Конфигурация приложения Package Inspector
-"""
-
-
 class Config:
-    """Базовая конфигурация приложения"""
-
     # Flask настройки
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB максимальный размер файла
 
     # Директории
-    UPLOAD_FOLDER = 'uploads'
+    UPLOAD_FOLDER = "uploads"
 
     # Разрешенные расширения файлов
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
     # Пороги для алгоритма сравнения
     SIMILARITY_THRESHOLD = 0.85  # Порог сходства для OK/FAIL (0.0 - 1.0)

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+
 from app.config import Config
 from app.image_utils import resize_to_match, to_grayscale
 
@@ -20,10 +21,10 @@ class ImageComparator:
         status = self._determine_status(similarity_score, defects)
 
         return {
-            'status': status,
-            'similarity_score': similarity_score,
-            'defects': defects,
-            'test_resized': test_resized
+            "status": status,
+            "similarity_score": similarity_score,
+            "defects": defects,
+            "test_resized": test_resized,
         }
 
     def _calculate_similarity(self, ref_gray, test_gray):
@@ -35,12 +36,14 @@ class ImageComparator:
     def _find_defects(self, ref_gray, test_gray):
         diff = cv2.absdiff(ref_gray, test_gray)
         _, thresh = cv2.threshold(diff, self.diff_threshold, 255, cv2.THRESH_BINARY)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT,
-                                          (self.kernel_size, self.kernel_size))
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_RECT, (self.kernel_size, self.kernel_size)
+        )
         cleaned = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
         cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_OPEN, kernel)
-        contours, _ = cv2.findContours(cleaned, cv2.RETR_EXTERNAL,
-                                       cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(
+            cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
 
         defects = []
         for contour in contours:
@@ -51,30 +54,32 @@ class ImageComparator:
             x, y, w, h = cv2.boundingRect(contour)
             defect_type = self._classify_defect(ref_gray, test_gray, x, y, w, h)
 
-            defects.append({
-                'bbox': [int(x), int(y), int(w), int(h)],
-                'area': int(area),
-                'type': defect_type
-            })
+            defects.append(
+                {
+                    "bbox": [int(x), int(y), int(w), int(h)],
+                    "area": int(area),
+                    "type": defect_type,
+                }
+            )
 
         return defects
 
     def _classify_defect(self, ref_gray, test_gray, x, y, w, h):
-        ref_roi = ref_gray[y:y+h, x:x+w]
-        test_roi = test_gray[y:y+h, x:x+w]
+        ref_roi = ref_gray[y : y + h, x : x + w]
+        test_roi = test_gray[y : y + h, x : x + w]
         ref_mean = np.mean(ref_roi)
         test_mean = np.mean(test_roi)
 
         if abs(ref_mean - test_mean) > 50:
             if test_mean < ref_mean:
-                return 'missing_element'
+                return "missing_element"
             else:
-                return 'extra_element'
+                return "extra_element"
 
-        return 'difference'
+        return "difference"
 
     def _determine_status(self, similarity_score, defects):
         if similarity_score >= self.similarity_threshold and len(defects) == 0:
-            return 'OK'
+            return "OK"
         else:
-            return 'FAIL'
+            return "FAIL"

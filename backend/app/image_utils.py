@@ -1,8 +1,9 @@
+import base64
+import io
+
 import cv2
 import numpy as np
-import base64
 from PIL import Image
-import io
 
 
 def load_image(file_storage):
@@ -28,8 +29,9 @@ def validate_image(image):
 
 def resize_to_match(reference, test):
     target_height, target_width = reference.shape[:2]
-    test_resized = cv2.resize(test, (target_width, target_height),
-                             interpolation=cv2.INTER_LANCZOS4)
+    test_resized = cv2.resize(
+        test, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4
+    )
     return test_resized
 
 
@@ -43,7 +45,7 @@ def encode_to_base64(image):
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     pil_image = Image.fromarray(image_rgb)
     buffer = io.BytesIO()
-    pil_image.save(buffer, format='JPEG', quality=90)
+    pil_image.save(buffer, format="JPEG", quality=90)
     buffer.seek(0)
-    img_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+    img_base64 = base64.b64encode(buffer.read()).decode("utf-8")
     return f"data:image/jpeg;base64,{img_base64}"
